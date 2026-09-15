@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Secrets
+.env
+*.pem
+*.key
+*.crt
+*.sig
+qemu-device/certs/
+
+# Terraform
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
+*.tfvars
+
+# Firmware binaries (large files)
+firmware/*.bin
+firmware/*.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# RSA private key — never commit
+keys/private_key.pem
