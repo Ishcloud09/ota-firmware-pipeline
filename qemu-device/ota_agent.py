@@ -6,7 +6,7 @@ downloads signed firmware from a presigned S3 URL, verifies the RSA signature
 using the verify_firmware.py logic, applies the update, reports status.
 
 FIRST-PASS SKELETON — the notify-next payload shape and job document keys
-get confirmed against real MQTT traffic once the IoT Thing + Job exist (Day B).
+get confirmed against real MQTT traffic once the IoT Thing + Job exist.
 Rollback (backup/restore on failure) is implemented below.
 """
 
@@ -17,7 +17,7 @@ import subprocess
 import paho.mqtt.client as mqtt
 import requests
 
-# ---- CONFIG: fill in once the Thing + certs exist (Day B) ----
+# ---- CONFIG: fill in once the Thing + certs exist ----
 THING_NAME = "qemu-ota-device-01"
 IOT_ENDPOINT = "REPLACE-ME.iot.eu-west-2.amazonaws.com"
 CA_CERT = "certs/AmazonRootCA1.pem"

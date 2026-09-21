@@ -26,4 +26,4 @@ firmware/*.zip
 Thumbs.db
 
 # RSA private key — never commit
-keys/private_key.pemqemu-device/certs/
+keys/private_key.pem
