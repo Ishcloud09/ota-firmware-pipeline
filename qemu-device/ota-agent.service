@@ -1,0 +1,15 @@
+[Unit]
+Description=OTA Update Agent
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/root/ota-firmware-pipeline
+ExecStart=/usr/bin/python3 /root/ota-firmware-pipeline/qemu-device/ota_agent.py
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

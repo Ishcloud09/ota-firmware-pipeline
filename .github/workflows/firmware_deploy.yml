@@ -1,0 +1,60 @@
+name: Build, Sign and Deploy Firmware
+
+# Triggered only by pushing a version tag, e.g.:
+#   git tag v1.1.0 && git push --tags
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install cryptography boto3
+
+      - name: Extract version from tag
+        id: version
+        run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
+      # The signing key is NEVER committed to the repo (keys/ is
+      # gitignored). It lives only in GitHub Secrets and is written
+      # to disk just for this run, on GitHub's own throwaway machine.
+      - name: Restore signing key from secret
+        run: |
+          mkdir -p keys
+          printf '%s' "${{ secrets.FIRMWARE_PRIVATE_KEY }}" > keys/private_key.pem
+
+      - name: Build firmware
+        run: python3 firmware/build_firmware.py ${{ steps.version.outputs.value }}
+
+      - name: Sign firmware
+        run: python3 scripts/sign_firmware.py firmware/ecu_firmware_v${{ steps.version.outputs.value }}.bin
+
+      - name: Upload firmware and signature to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: eu-west-2
+        run: |
+          VERSION=${{ steps.version.outputs.value }}
+          aws s3 cp firmware/ecu_firmware_v${VERSION}.bin s3://ota-firmware-store-ish/firmware/v${VERSION}/ecu_firmware_v${VERSION}.bin
+          aws s3 cp firmware/ecu_firmware_v${VERSION}.bin.sig s3://ota-firmware-store-ish/firmware/v${VERSION}/ecu_firmware_v${VERSION}.bin.sig
+
+      # Note: verification does NOT happen here, on purpose — only the
+      # device (ota_agent.py) verifies. See create_job.py.
+      - name: Create IoT Job
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: eu-west-2
+        run: python3 scripts/create_job.py ${{ steps.version.outputs.value }}

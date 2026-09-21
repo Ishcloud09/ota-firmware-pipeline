@@ -45,4 +45,5 @@ def build_firmware(version="1.0.0"):
     return output_path
 
 if __name__ == "__main__":
-    build_firmware("1.0.0")
+    import sys
+    build_firmware(sys.argv[1] if len(sys.argv) > 1 else "1.0.0")
